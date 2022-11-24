@@ -59,6 +59,27 @@ class CookieManager {
     }
   }
 
+  // Returns map of request ID to raw CDP request data. This will be populated as requests are made.
+  // taken from https://stackoverflow.com/questions/47078655/missing-request-headers-in-puppeteer/62232903#62232903
+  // and https://github.com/puppeteer/puppeteer/issues/5364
+  async setupLoggingOfAllNetworkData() {
+    const cdpSession = await this.page.target().createCDPSession()
+    await cdpSession.send('Network.enable')
+    const cdpRequestDataRaw = []
+    const addCDPRequestDataListener = (eventName) => {
+        cdpSession.on(eventName, request => {
+            cdpRequestDataRaw.push(request);
+            // cdpRequestDataRaw[request.requestId] = cdpRequestDataRaw[request.requestId] || {}
+            // Object.assign(cdpRequestDataRaw[request.requestId], { [eventName]: request })
+        })
+    }
+    addCDPRequestDataListener('Network.requestWillBeSent')
+    // addCDPRequestDataListener('Network.requestWillBeSentExtraInfo')
+    // addCDPRequestDataListener('Network.responseReceived')
+    // addCDPRequestDataListener('Network.responseReceivedExtraInfo')
+    return cdpRequestDataRaw;
+  }
+
   async fetchCookie() {
     try {
       // create a new browser
@@ -70,7 +91,11 @@ class CookieManager {
       await this.page.setUserAgent(new UserAgent().toString());
       await this.page.goto(webadvisor.register);
 
+
+
+
       // wait until login has been loaded on screen
+      const cdpRequestDataRaw = await this.setupLoggingOfAllNetworkData();
       await this.page.waitForSelector(".form-horizontal");
       await this.page.type("#inputUsername", config.username);
       await this.page.type("#inputPassword", config.password);
@@ -79,6 +104,15 @@ class CookieManager {
         waitUntil: "networkidle0",
       });
 
+      // get the header "__ReqeustVerificationToken" to send ajax requests across the page
+      // cdpRequestDataRaw.forEach(request => {
+      //   console.log(request);
+      // });
+      console.log(JSON.stringify(cdpRequestDataRaw, null, 2));
+      const requestExtracted = cdpRequestDataRaw.find(requestData => ("__RequestVerificationToken" in requestData.request.headers) ? requestData.request.headers["__RequestVerificationToken"] : null);
+      this.requestVerificationToken = requestExtracted.headers["__RequestVerificationToken"];
+      console.log(JSON.stringify(requestExtracted));
+      // console.log(JSON.stringify(cdpRequestDataRaw, null, 2))
       // get the cookies once we've logged in, joining all of them into a string
       this.setCookie(
         _.join(
@@ -89,20 +123,20 @@ class CookieManager {
         )
       );
 
-      const requestVerificationToken = _.filter(
-        await this.page.cookies(),
-        ({ name, value }) => {
-          console.log(name, value);
-          if (name === "__RequestVerificationToken_L1N0dWRlbnQ1") {
-            return true;
-          }
-          return false;
-        }
-      );
-      this.requestVerificationToken =
-        requestVerificationToken.length != 0
-          ? requestVerificationToken[0]
-          : null;
+      // const requestVerificationToken = _.filter(
+      //   await this.page.cookies(),
+      //   ({ name, value }) => {
+      //     console.log(name, value);
+      //     if (name === "__RequestVerificationToken_L1N0dWRlbnQ1") {
+      //       return true;
+      //     }
+      //     return false;
+      //   }
+      // );
+      // this.requestVerificationToken =
+      //   requestVerificationToken.length != 0
+      //     ? requestVerificationToken[0]
+      //     : null;
       return this.cookie;
     } catch (err) {
       throw new Error(err);

@@ -1,0 +1,50 @@
+ProtocolError: Protocol error (DOM.describeNode): Cannot find context with specified id
+    at C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Connection.js:329:24
+    at new Promise (<anonymous>)
+    at CDPSessionImpl.send (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Connection.js:325:16)
+    at next (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-extra-plugin-stealth\evasions\sourceurl\index.js:34:41)
+    at CDPSessionImpl.send (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-extra-plugin-stealth\evasions\sourceurl\index.js:67:18)
+    at IsolatedWorld.adoptHandle (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\IsolatedWorld.js:379:119)        
+    at runMicrotasks (<anonymous>)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)    
+    at async IsolatedWorld.transferHandle (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\IsolatedWorld.js:385:24)SIGINT received, closing browser and logging out...
+logged out successfully!
+
+Sun Nov 20 2022 02:00:54 GMT-0500 (Eastern Standard Time) ProtocolError: Protocol error (DOM.describeNode): Cannot find context with specified id
+    at C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Connection.js:329:24
+    at new Promise (<anonymous>)
+    at CDPSessionImpl.send (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Connection.js:325:16)
+    at next (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-extra-plugin-stealth\evasions\sourceurl\index.js:34:41)
+    at CDPSessionImpl.send (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-extra-plugin-stealth\evasions\sourceurl\index.js:67:18)
+    at IsolatedWorld.adoptHandle (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\IsolatedWorld.js:379:119)        
+    at runMicrotasks (<anonymous>)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)    
+    at async IsolatedWorld.transferHandle (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\IsolatedWorld.js:385:24)SIGINT received, closing browser and logging out...
+C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Connection.js:316
+            return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${__classPrivateFieldGet(this, _CDPSessionImpl_targetType, "f")} has been closed.`));
+                                  ^
+
+Error: Protocol error (Page.navigate): Session closed. Most likely the page has been closed.
+    at CDPSessionImpl.send (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Connection.js:316:35)
+    at next (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-extra-plugin-stealth\evasions\sourceurl\index.js:34:41)
+    at CDPSessionImpl.send (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-extra-plugin-stealth\evasions\sourceurl\index.js:67:18)
+    at navigate (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Frame.js:228:47)
+    at Frame.goto (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Frame.js:206:13)
+    at CDPPage.goto (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Page.js:1053:91)
+    at CookieManager.logout (C:\Users\jason\Projects\GryphPick\src\helpers\CookieManager.js:116:24)
+    at process.exitPuppeteer (C:\Users\jason\Projects\GryphPick\index.js:12:23)
+    at process.emit (node:events:390:28)
+    at Interface.<anonymous> (C:\Users\jason\Projects\GryphPick\index.js:25:13)
+
+Mon Nov 21 2022 00:39:24 GMT-0500 (Eastern Standard Time) TimeoutError: Waiting for selector `#notification-messages-list` failed: Waiting failed: 30000ms exceeded
+    at Timeout.<anonymous> (C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\WaitTask.js:64:32)
+    at listOnTimeout (node:internal/timers:557:17)
+    at processTimers (node:internal/timers:500:7)
+SIGINT received, closing browser and logging out...
+C:\Users\jason\Projects\GryphPick\node_modules\puppeteer-core\lib\cjs\puppeteer\common\Connection.js:316
+            return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${__classPrivateFieldGet(this, _CDPSessionImpl_targetType, "f")} has been closed.`));
+
+
+
+
+__requestverificationtoken: 6lyIVNbg4QL53nxXFBUXTkoRHp2m76OsE6mCvycvB0uCRWisixeU6I7wkeUOUczEl8RsO-_EpwYo2yAQxNjT_JSmHgXpEPlPDxWO42m15jt9G82fYVQwtqpgNpEsIiG1g6MkbY7FO4W3sw97aI7RvA2
