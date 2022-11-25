@@ -1,15 +1,16 @@
 const axios = require("axios");
 const fetch = require("node-fetch");
+const { webadvisor } = require("../config");
 
 const sleep = async (time) => {
   return new Promise((resolve) => setTimeout(resolve, time));
 };
 
-const registerWithAxios = async (requestVFT, cookie) => {
+const registerWithAxios = async (requestVFT, cookie, payload) => {
   return await axios({
     method: "post",
     url: "https://colleague-ss.uoguelph.ca/Student/Planning/DegreePlans/RegisterSections",
-    data: '{"sectionRegistrations":[{"SectionId":"181965","Credits":0.5,"Action":"Add","DropReasonCode":null,"IntentToWithdrawId":null}],"studentId":"1134487"}',
+    data: payload,
     headers: {
       __RequestVerificationToken: requestVFT,
       "Sec-Fetch-Dest": "empty",
@@ -30,7 +31,7 @@ const registerWithAxios = async (requestVFT, cookie) => {
   });
 };
 
-const registerWithFetch = (requestVFT, cookie) => {
+const registerWithFetch = async (requestVFT, cookie) => {
   const res = await fetch(
     "https://colleague-ss.uoguelph.ca/Student/Planning/DegreePlans/RegisterSections",
     {
@@ -56,6 +57,30 @@ const registerWithFetch = (requestVFT, cookie) => {
     return await res.json();
   }
   throw new Error("could not fetch successfully");
-}
+};
 
-module.exports = { sleep, registerWithAxios, registerWithFetch };
+const getDegreePlan = async (requestVFT, cookie) => {
+    return await axios({
+        method: "get",
+        url: webadvisor.degreePlan,
+        headers: {
+            __RequestVerificationToken: requestVFT,
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "x-requested-with": "XMLHttpRequest",
+            cookie: cookie,
+            Accept: "application/json, text/javascript, */*; q=0.01",
+            "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Content-Type": "application/json, charset=utf-8",
+            "X-Requested-With": "XMLHttpRequest",
+            Origin: "https://colleague-ss.uoguelph.ca",
+            Connection: "keep-alive",
+            Referer: "https://colleague-ss.uoguelph.ca/Student/Planning/DegreePlans",
+        },
+        withCredentials: true,
+    });
+};
+
+module.exports = { sleep, registerWithAxios, registerWithFetch, getDegreePlan };

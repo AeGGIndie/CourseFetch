@@ -11,6 +11,6 @@ const config = {
 config.webadvisor.home = config.webadvisor.baseURL + "/Student";
 config.webadvisor.register = config.webadvisor.home + "/Planning/DegreePlans";
 config.webadvisor.logout = config.webadvisor.home + "/Account/LogOff";
-
+config.webadvisor.degreePlan = config.webadvisor.home + "/Planning/DegreePlans/CurrentAsync";
 
 module.exports = config;
