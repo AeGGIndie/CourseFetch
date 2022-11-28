@@ -84,25 +84,28 @@ class CookieManager {
     }
 
     await navigate();
-
     // get the header "__ReqeustVerificationToken" to send ajax requests across the page
-    const requestExtracted = this.#cdpRequestDataRaw
-      .reverse()
-      .find((requestData) => {
-        if (!requestData){
-            return false;
-        }
-        if (!requestData.request) {
-          return false;
-        }
-        if (!requestData.request.headers) {
-          return false;
-        }
+    let requestExtracted = null;
+    do {
+        await sleep(5000);
+        requestExtracted = this.#cdpRequestDataRaw
+        .reverse()
+        .find((requestData) => {
+            if (!requestData){
+                return false;
+            }
+          if (!("request" in requestData)) {
+              return false;
+          }
+          if (!("headers" in requestData.request)) {
+              return false;
+          }
 
-        return "__RequestVerificationToken" in requestData.request.headers
+          return "__RequestVerificationToken" in requestData.request.headers
           ? requestData.request.headers["__RequestVerificationToken"]
           : false;
-      });
+        });
+    } while (requestExtracted == null);
     this.#requestVerificationToken =
       requestExtracted.request.headers["__RequestVerificationToken"];
     return true;
@@ -112,7 +115,8 @@ class CookieManager {
   // refreshes the current user session to continue making requests (request verification token + cookie)
   //
   async refreshSession() {
-    await this.#browser.close();
+//    await this.#browser.close();
+    await this.logout();
     await sleep(3000);
     await this.fetchCookie();
   }
@@ -123,7 +127,7 @@ class CookieManager {
       await this.page.type("#inputPassword", password);
       await this.page.click('button[type="submit"]');
       await this.page.waitForNavigation({
-        waitUntil: "networkidle0",
+        waitUntil: "networkidle2",
       });
   }
 
@@ -167,26 +171,23 @@ class CookieManager {
    * per script to create one instance of the manager.
    */
   async fetchCookie() {
-    try {
-      // create a new browser
-      this.#browser = await puppeteer.launch(this.#browserOptions);
+    // create a new browser
+    this.#browser = await puppeteer.launch(this.#browserOptions);
 
-      // go to the login page from webadvisor
-      this.page = await this.#browser.newPage();
-      this.#cdpRequestDataRaw = await this.setupLoggingOfAllNetworkData();
-      await this.page.setDefaultNavigationTimeout(0);
-      await this.page.setUserAgent(new UserAgent().toString());
-      await this.page.goto(webadvisor.register);
+    // go to the login page from webadvisor
+    this.page = await this.#browser.newPage();
+    this.#cdpRequestDataRaw = await this.setupLoggingOfAllNetworkData();
+    await this.page.setDefaultNavigationTimeout(0);
+    await this.page.setUserAgent(new UserAgent().toString());
+    await this.page.goto(webadvisor.register);
 
-      // get the requestverificationtoken header and cookies
-      await this.refreshRequestVfToken(async () => {
-          await this.simulateLogin();
-      });
-      await this.refreshCookie();
-      return this.getCookie();
-    } catch (err) {
-      throw new Error(err);
-    }
+    // get the requestverificationtoken header and cookies
+    await this.refreshRequestVfToken(async () => {
+        await this.simulateLogin();
+    });
+    await this.refreshCookie();
+    return this.getCookie();
+  
   }
 
   /**
