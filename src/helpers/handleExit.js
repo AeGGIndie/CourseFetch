@@ -15,11 +15,16 @@ const handleWindowsSignals = () => {
   }
 };
 
-const handleExit = async (cookieManager) => {
+const handleExit = async (cookieManager, requestControllers) => {
   handleWindowsSignals();
 
   const exitPuppeteer = async (signal) => {
     console.log("SIGINT received, closing browser and logging out...");
+    // stop all requests first
+    if (requestControllers){
+      requestControllers.forEach(controller => controller.abort());
+    }
+
     await cookieManager.logout();
     console.log("logged out successfully!");
     process.exit(0);

@@ -6,9 +6,10 @@ const sleep = async (time) => {
   return new Promise((resolve) => setTimeout(resolve, time));
 };
 
-const registerWithAxios = async (requestVFT, cookie, payload) => {
+const registerWithAxios = async (requestVFT, cookie, payload, controller) => {
   return await axios({
     method: "post",
+    signal: controller.signal,
     url: "https://colleague-ss.uoguelph.ca/Student/Planning/DegreePlans/RegisterSections",
     data: payload,
     headers: {
@@ -31,7 +32,7 @@ const registerWithAxios = async (requestVFT, cookie, payload) => {
   });
 };
 
-const registerWithFetch = async (requestVFT, cookie) => {
+const registerWithFetch = async (requestVFT, cookie, payload) => {
   const res = await fetch(
     "https://colleague-ss.uoguelph.ca/Student/Planning/DegreePlans/RegisterSections",
     {
@@ -49,7 +50,7 @@ const registerWithFetch = async (requestVFT, cookie) => {
           "https://colleague-ss.uoguelph.ca/Student/Planning/DegreePlans?hideProxyDialog=false",
         "Referrer-Policy": "strict-origin-when-cross-origin",
       },
-      body: '{"sectionRegistrations":[{"SectionId":"181965","Credits":0.5,"Action":"Add","DropReasonCode":null,"IntentToWithdrawId":null}],"studentId":"1134487"}',
+      body: JSON.stringify(payload),
       method: "POST",
     }
   );

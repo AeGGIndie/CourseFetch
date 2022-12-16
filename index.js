@@ -11,14 +11,14 @@ const CookieManager = require("./src/CookieManager");
 const handleExit = require("./src/helpers/handleExit");
 const { registerWithAxios, sleep, getDegreePlan } = require("./src/helpers/utils");
 
-// prepare to scrape and setup exit handlers
-const cookieManager = new CookieManager();
-
-
 (async () => {
+  // prepare to scrape and setup exit handlers
+  let cookieManager = new CookieManager();
+  let requestControllers = [];
+  
   try {
     // setup exit handlers
-    await handleExit(cookieManager);
+    await handleExit(cookieManager, requestControllers);
 
     // setup for user variables (should be changed to config)
     const termToRegister = "W23";
@@ -37,7 +37,6 @@ const cookieManager = new CookieManager();
     if (!verificationToken) {
       throw new Error("no verification token");
     }
-//    await fs.writeFile("sessionCookies.json", JSON.stringify({ cookie, verificationToken }));
 
     // get the users degree plan for courses to be registered
     const degreeResponse = await getDegreePlan(verificationToken, cookie);
@@ -63,25 +62,28 @@ const cookieManager = new CookieManager();
 
     // attempt to loop until course has been registered
     let data = null; // holds the response data
-    let tries = 0;
-    const max = 10;
+
 
     do {
-      const res = await registerWithAxios(verificationToken, cookie, sectionPayload);
+      const controller = new AbortController();
+      requestControllers.push(controller);
+      const res = await registerWithAxios(verificationToken, cookie, sectionPayload, controller);
       data = res.data;
       // if and when our cookie/requestVFT expires, we should create a new session
       // and utilize those sessions cookies and vft
-      if (data["InvalidSession"] || tries > max){
+      if (data["InvalidSession"]){
         console.log("refreshing...");
-        await cookieManager.refreshSession();
+        await cookieManager.logout();
+        cookieManager = new CookieManager();
+        await cookieManager.fetchCookie();
+        await sleep(3000);
         console.log("refreshed successfully");
         cookie = cookieManager.getCookie();
         verificationToken = cookieManager.getRequestVerificationToken();
-        tries = 0;
+
         continue;
       }
       console.log(data);
-      tries++;
       await sleep(500);
     } while (data.length > 0);
   } catch (err) {

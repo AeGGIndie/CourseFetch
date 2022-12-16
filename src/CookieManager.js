@@ -125,10 +125,14 @@ class CookieManager {
       await this.page.waitForSelector(".form-horizontal");
       await this.page.type("#inputUsername", username);
       await this.page.type("#inputPassword", password);
-      await this.page.click('button[type="submit"]');
-      await this.page.waitForNavigation({
-        waitUntil: "networkidle2",
-      });
+      await Promise.all([
+        this.page.waitForNavigation({
+          waitUntil: "networkidle2",
+        }),
+        this.page.click('button[type="submit"]'),
+      ]);
+
+
   }
 
   /**
