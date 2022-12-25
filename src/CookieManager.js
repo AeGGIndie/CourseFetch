@@ -4,6 +4,7 @@ const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const AdblockerPlugin = require("puppeteer-extra-plugin-adblocker");
 const UserAgent = require("user-agents");
 const _ = require("lodash");
+const chromium = require("chromium");
 const { username, password, webadvisor } = require("./config");
 const { sleep } = require("./helpers/utils");
 
@@ -29,10 +30,18 @@ class CookieManager {
     this.#requestVerificationToken = null;
     this.#browserOptions = {
       handleSIGINT: false, // manually handle
-      args: ["--window-size=1920,1080"],
+      args: [
+          process.env.NODE_ENV === "PROD" ? "--window-size=1920,1080" : "",
+          "--no-sandbox",
+          "--disable-gpu",
+          "--single-process",
+          "--no-zygote"
+      ],
       headless: process.env.NODE_ENV === "PROD",
-      executablePath: executablePath(),
-      // ignoreDefaultArgs: ['--disable-extensions'],
+      executablePath: chromium.path,
+       ignoreDefaultArgs: [
+          '--disable-extensions',
+       ],
     };
     this.#cdpSession = null;
     this.#cdpRequestDataRaw = null;
@@ -208,6 +217,7 @@ class CookieManager {
     await this.page.waitForTimeout(2000);
     this.page && (await this.page.close());
     this.#browser && (await this.#browser.close());
+    process.exit(0);
   }
 }
 

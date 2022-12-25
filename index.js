@@ -6,7 +6,6 @@
  * inspect the JSON accordingly
  */
 const process = require("process");
-const fs = require("fs");
 const CookieManager = require("./src/CookieManager");
 const handleExit = require("./src/helpers/handleExit");
 const { registerWithAxios, sleep, getDegreePlan } = require("./src/helpers/utils");
@@ -26,6 +25,7 @@ const { registerWithAxios, sleep, getDegreePlan } = require("./src/helpers/utils
 
     // launch puppeteer and get the cookies + vft
     await cookieManager.fetchCookie();
+    process.send("ready");
 
     // get the cookies and requestVFT to prepare to
     // make requests
@@ -84,7 +84,7 @@ const { registerWithAxios, sleep, getDegreePlan } = require("./src/helpers/utils
         continue;
       }
       console.log(data);
-      await sleep(500);
+      await sleep(1500);
     } while (data.length > 0);
   } catch (err) {
     console.error(new Date().toString(), err);

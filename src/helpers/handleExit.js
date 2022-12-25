@@ -40,7 +40,13 @@ const handleExit = async (cookieManager, requestControllers) => {
       }, 1000 * 10);
     };
   };
-  process.on("SIGINT", exitPuppeteer);
+  process.on("message", async (msg) => {
+    if (msg == "shutdown"){
+        await exitPuppeteer();
+    }
+  });
+//  process.on("SIGINT", exitPuppeteer);
+//  process.on("SIGTERM", exitPuppeteer);
   process.on("uncaughtException", forceExit);
 };
 
