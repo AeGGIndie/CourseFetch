@@ -22,7 +22,7 @@ module.exports = {
     // shutdown using message, not SIGKILL
     shutdown_with_message: true,
     // development env variables
-    env: {
+    env_development: { // i have no clue why this fixes NODE_ENV being set
       NODE_ENV: "DEV",
       USER_NAME: process.env.USER_NAME,
       PASSWORD: process.env.PASSWORD,

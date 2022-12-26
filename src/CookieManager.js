@@ -31,7 +31,7 @@ class CookieManager {
     this.#browserOptions = {
       handleSIGINT: false, // manually handle
       args: [
-          process.env.NODE_ENV === "PROD" ? "--window-size=1920,1080" : "",
+          process.env.NODE_ENV === "PROD" ? "" : "--window-size=1920,1080",
           "--no-sandbox",
           "--disable-gpu",
           "--single-process",
