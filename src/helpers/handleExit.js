@@ -1,5 +1,6 @@
 const process = require("process");
 const rl = require("readline");
+const { sleep } = require("./utils");
 
 const handleWindowsSignals = () => {
   // closing application when user is on windows
@@ -24,8 +25,8 @@ const handleExit = async (cookieManager, requestControllers) => {
     if (requestControllers){
       requestControllers.forEach(controller => controller.abort());
     }
-
     await cookieManager.logout();
+    await sleep(2000);
     console.log("logged out successfully!");
     process.exit(0);
   };

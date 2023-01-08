@@ -60,7 +60,7 @@ const registerWithFetch = async (requestVFT, cookie, payload) => {
   throw new Error("could not fetch successfully");
 };
 
-const getDegreePlan = async (requestVFT, cookie) => {
+const requestDegreePlan = async (requestVFT, cookie) => {
     return await axios({
         method: "get",
         url: webadvisor.degreePlan,
@@ -84,4 +84,4 @@ const getDegreePlan = async (requestVFT, cookie) => {
     });
 };
 
-module.exports = { sleep, registerWithAxios, registerWithFetch, getDegreePlan };
+module.exports = { sleep, registerWithAxios, registerWithFetch, requestDegreePlan };

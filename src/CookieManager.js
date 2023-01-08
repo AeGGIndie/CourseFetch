@@ -1,12 +1,11 @@
 const puppeteer = require("puppeteer-extra");
-const { executablePath } = require("puppeteer");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const AdblockerPlugin = require("puppeteer-extra-plugin-adblocker");
 const UserAgent = require("user-agents");
 const _ = require("lodash");
 const chromium = require("chromium");
-const { username, password, webadvisor } = require("./config");
-const { sleep } = require("./helpers/utils");
+const { username, password, studentId, term, webadvisor } = require("./config");
+const { sleep, requestDegreePlan } = require("./helpers/utils");
 
 // configuring puppeteer
 puppeteer.use(StealthPlugin());
@@ -21,32 +20,48 @@ class CookieManager {
   #requestVerificationToken = null;
   #cookie = null;
 
+  #username = null;
+  #password = null;
+  #studentId = null;
+  #termToRegister = null;
+  #degreePlan = null;
+
   // public
   page = null;
 
-  constructor() {
-    this.#browser = null;
-    this.#cookie = null;
-    this.#requestVerificationToken = null;
-    this.#browserOptions = {
-      handleSIGINT: false, // manually handle
-      args: [
-          process.env.NODE_ENV === "PROD" ? "" : "--window-size=1920,1080",
-          "--no-sandbox",
-          "--disable-gpu",
-          "--single-process",
-          "--no-zygote"
-      ],
-      headless: process.env.NODE_ENV === "PROD",
-      executablePath: chromium.path,
-       ignoreDefaultArgs: [
-          '--disable-extensions',
-       ],
-    };
-    this.#cdpSession = null;
-    this.#cdpRequestDataRaw = null;
-    this.page = null;
+  constructor(user = username, pass = password, sId = studentId, termToRegister = term ){
+      this.initializePuppet();
+      this.#username = user;
+      this.#password = pass;
+      this.#studentId = sId;
+      this.#termToRegister = termToRegister;
   }
+
+  initializePuppet(){
+      this.#browser = null;
+      this.#cookie = null;
+      this.#requestVerificationToken = null;
+      this.#browserOptions = {
+          handleSIGINT: false, // manually handle
+        args: [
+              process.env.NODE_ENV === "PROD" ? "" : "--window-size=1920,1080",
+              "--no-sandbox",
+              "--disable-gpu",
+              "--single-process",
+              "--no-zygote"
+        ],
+        headless: process.env.NODE_ENV === "PROD",
+        executablePath: chromium.path,
+        ignoreDefaultArgs: [
+              '--disable-extensions',
+              ],
+      };
+      this.#cdpSession = null;
+      this.#cdpRequestDataRaw = null;
+      this.page = null;
+  }
+
+
 
   // get for cookie
   getCookie() {
@@ -66,6 +81,16 @@ class CookieManager {
   // get for request verification token
   getRequestVerificationToken() {
     return this.#requestVerificationToken;
+  }
+
+  // get for degree plan
+  getDegreePlan(){
+    return this.#degreePlan;
+  }
+
+  // get for student id
+  getStudentId(){
+    return this.#studentId;
   }
 
   /**
@@ -140,8 +165,13 @@ class CookieManager {
         }),
         this.page.click('button[type="submit"]'),
       ]);
-
-
+      if (this.page.url() === webadvisor.authFailed){
+          process.send({
+            type: "process:forceStop",
+            data: { success: false },
+          });
+          throw new Error("CookieManager.js: authentication failed. either credentials are incorrect or you have too many sessions open.");
+      }
   }
 
   /**
@@ -203,21 +233,48 @@ class CookieManager {
   
   }
 
+  /*
+  * Gets the current users degree plan, see config.webadvisor.degreePlan
+  */
+  async fetchDegreePlan(){
+    const degreeResponse = await requestDegreePlan(this.#requestVerificationToken, this.#cookie);
+    const { DegreePlan } = degreeResponse.data;
+    this.#degreePlan = DegreePlan;
+    return this.getDegreePlan();
+  }
+
+  /*
+  * Requires degree plan to be called first, returns all courses that need to be registered
+  */
+  getSectionsToRegister(){
+    // get the current study term we want to register for
+    const registerTerm = this.#degreePlan["Terms"].find(term => term["Code"] === this.#termToRegister);
+    const coursesToRegister = registerTerm["PlannedCourses"].filter(course => !course["Ispreregistered"] && !course["HasRegisteredSection"]);
+    const coursePayload = coursesToRegister.map(course => {
+      return {
+        SectionId: course["Section"]["Id"],
+        Credits: course["Credits"],
+        Action: "Add",
+        DropReasonCode: null,
+        IntentToWithdrawId: null,
+      }
+    });
+    return coursePayload;
+  }
+
   /**
    * Safely logs the user out of their session
    */
   async logout() {
     // close page and browser instances
-    this.page &&
+    this.#browser && this.page &&
       this.#cookie &&
       (await this.page.goto(webadvisor.logout)) &&
       (await this.page.waitForNavigation({
         waitUntil: "networkidle2",
       }));
-    await this.page.waitForTimeout(2000);
     this.page && (await this.page.close());
     this.#browser && (await this.#browser.close());
-    process.exit(0);
   }
 }
 

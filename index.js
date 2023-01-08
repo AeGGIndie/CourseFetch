@@ -6,11 +6,13 @@
  * inspect the JSON accordingly
  */
 const process = require("process");
+const { parse } = require("node-html-parser");
 const CookieManager = require("./src/CookieManager");
 const handleExit = require("./src/helpers/handleExit");
 const { registerWithAxios, sleep, getDegreePlan } = require("./src/helpers/utils");
+const { studentId, term } = require("./src/config");
 
-(async () => {
+const main = async () => {
   // prepare to scrape and setup exit handlers
   let cookieManager = new CookieManager();
   let requestControllers = [];
@@ -19,13 +21,8 @@ const { registerWithAxios, sleep, getDegreePlan } = require("./src/helpers/utils
     // setup exit handlers
     await handleExit(cookieManager, requestControllers);
 
-    // setup for user variables (should be changed to config)
-    const termToRegister = "W23";
-    const studentId = process.env.STUDENT_ID;
-
     // launch puppeteer and get the cookies + vft
     await cookieManager.fetchCookie();
-    process.send("ready");
 
     // get the cookies and requestVFT to prepare to
     // make requests
@@ -39,57 +36,58 @@ const { registerWithAxios, sleep, getDegreePlan } = require("./src/helpers/utils
     }
 
     // get the users degree plan for courses to be registered
-    const degreeResponse = await getDegreePlan(verificationToken, cookie);
-    const { DegreePlan } = degreeResponse.data;
+    const degreePlan = await cookieManager.fetchDegreePlan();
+    if (!degreePlan){
+      throw new Error("no degree plan was found");
+    }
 
-    // get the current study term we want to register for
-    const registerTerm = DegreePlan["Terms"].find(term => term["Code"] === termToRegister);
-    const coursesToRegister = registerTerm["PlannedCourses"].filter(course => !course["Ispreregistered"] && !course["HasRegisteredSection"]);
-    const coursePayload = coursesToRegister.map(course => {
-        return {
-            SectionId: course["Section"]["Id"],
-            Credits: course["Credits"],
-            Action: "Add",
-            DropReasonCode: null,
-            IntentToWithdrawId: null,
-        }
-    });
-    // actual data payload to be sent in our request
-    const sectionPayload = {
-        sectionRegistrations: coursePayload,
-        studentId,
-    };
+    process.send("ready");
 
     // attempt to loop until course has been registered
     let data = null; // holds the response data
-
+    // refresh function
+    const refresh = async () => {
+      await cookieManager.logout();
+      cookieManager = new CookieManager();
+      await cookieManager.fetchCookie();
+      await sleep(3000);
+    }
 
     do {
+      // before making requests, ensure abortControllers are attached to cancel the mid-way (axios)
       const controller = new AbortController();
       requestControllers.push(controller);
-      const res = await registerWithAxios(verificationToken, cookie, sectionPayload, controller);
-      data = res.data;
+
+      // register with VFT, cookie, object with student Id and courses, and catch with controller
+      const res = await registerWithAxios(verificationToken, cookie, {
+        sectionRegistrations: cookieManager.getSectionsToRegister(),
+        sId: cookieManager.getStudentId()
+        }, controller);
+      data = res.data; // when succesful
       // if and when our cookie/requestVFT expires, we should create a new session
       // and utilize those sessions cookies and vft
       if (data["InvalidSession"]){
         console.log("refreshing...");
-        await cookieManager.logout();
-        cookieManager = new CookieManager();
-        await cookieManager.fetchCookie();
-        await sleep(3000);
+        await refresh();
         console.log("refreshed successfully");
         cookie = cookieManager.getCookie();
         verificationToken = cookieManager.getRequestVerificationToken();
-
         continue;
       }
-      console.log(data);
+      const htmlResponse = parse(data);
+      if (htmlResponse.childNodes.length == 1){ // not sure why, but 1 results in only nothing being parsed
+        console.log("received: ", JSON.stringify(data));
+      }
       await sleep(1500);
     } while (data.length > 0);
   } catch (err) {
-    console.error(new Date().toString(), err);
+    if ((err.code && err.code != "ERR_CANCELED")) {
+      console.error(new Date().toString(), err);
+    }
   } finally {
     await cookieManager.logout();
     process.exit(0);
   }
-})();
+};
+
+main();

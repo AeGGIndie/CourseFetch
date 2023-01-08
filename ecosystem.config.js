@@ -21,6 +21,10 @@ module.exports = {
     restart_delay: 6000,
     // shutdown using message, not SIGKILL
     shutdown_with_message: true,
+    // minimum uptime for app to be considered started
+    min_uptime: 60000,
+    // max number of restarts until errors
+    max_restarts: 2,
     // development env variables
     env_development: { // i have no clue why this fixes NODE_ENV being set
       NODE_ENV: "DEV",
